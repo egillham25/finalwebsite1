@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="mystyles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the T-Rex!</title>
+    <style>
+        /* Basic page styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #e0f7fa;
+            padding: 15px;
+            margin: 0;
+        }
+
+        h1 {
+            color: #01579b;
+        }
+
+        /* Game area styling */
+        #game-area {
+            width: 90%;
+            max-width: 700px;
+            height: 500px;
+            background-color: #87CEEB; /* Layer 0: Sky */
+            border: 3px solid #0277bd;
+            border-radius: 15px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            background-image: linear-gradient(to bottom, #87CEEB 70%, #90EE90 70%); /* Sky/Grass */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Common styling for all hiding spots */
+        .hiding-spot {
+            position: absolute;
+            cursor: pointer;
+            z-index: 2; /* Layer 2: Scenery */
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            border-radius: 10px;
+        }
+
+        .hiding-spot:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        /* --- Specific Hiding Spot Styles & Positions --- */
+
+        /* Trees and Bushes remain green */
+        #tree1, #tree2, #bush1, #bush2 {
+             background-color: #2E8B57; /* Sea Green */
+        }
+
+        #tree1 {
+            width: 80px; height: 150px;
+            bottom: 50px; left: 5%; border-radius: 40px 40px 5px 5px;
+        }
+        /* ADDED: Tree stump */
+        #tree1::after {
+             content: '';
+             position: absolute;
+             bottom: -20px; /* Position below the green part */
+             left: 50%;
+             transform: translateX(-50%);
+             width: 20px; /* Stump width */
+             height: 25px; /* Stump height */
+             background-color: #8B4513; /* Saddle Brown */
+             z-index: -1; /* Behind green part */
+             border-radius: 0 0 3px 3px;
+        }
+
+        #tree2 {
+            width: 100px; height: 180px;
+            bottom: 30px; right: 8%; border-radius: 50px 50px 10px 10px;
+        }
+        /* ADDED: Tree stump */
+         #tree2::after {
+             content: '';
+             position: absolute;
+             bottom: -25px; /* Position below the green part */
+             left: 50%;
+             transform: translateX(-50%);
+             width: 25px; /* Stump width */
+             height: 30px; /* Stump height */
+             background-color: #8B4513; /* Saddle Brown */
+             z-index: -1;
+             border-radius: 0 0 5px 5px;
+        }
+
+        #bush1 {
+            width: 100px; height: 60px;
+            bottom: 10px; left: 25%; border-radius: 30px;
+        }
+        #bush2 {
+            width: 120px; height: 70px;
+            bottom: 5px; left: 45%; border-radius: 35px;
+        }
+
+        /* CHANGED: Bench is now brown */
+        #bench1 {
+            width: 150px; height: 40px;
+            background-color: #A0522D; /* Sienna */
+            border: 5px solid #8B4513; /* Saddle Brown border */
+            bottom: 20px; right: 25%;
+            border-radius: 5px;
+        }
+        /* ADDED: Bench legs */
+         #bench1::before, #bench1::after {
+            content: '';
+            position: absolute;
+            bottom: -15px; /* Position below bench seat */
+            width: 15px;
+            height: 15px;
+            background-color: #8B4513; /* Saddle Brown */
+            z-index: -1; /* Behind bench seat */
+        }
+         #bench1::before { left: 15px; }
+         #bench1::after { right: 15px; }
+
+        /* Clouds remain white */
+        #cloud1 {
+            width: 120px; height: 60px; background-color: #f0f8ff;
+            top: 50px; left: 15%; border-radius: 30px 30px 20px 40px; opacity: 0.9;
+        }
+        #cloud2 {
+            width: 150px; height: 75px; background-color: #f0f8ff;
+            top: 80px; right: 15%; border-radius: 40px 35px 45px 30px; opacity: 0.9;
+        }
+
+        /* --- T-Rex Styling --- */
+        #cat { /* ID kept for simplicity */
+            position: absolute;
+            visibility: hidden; /* Start hidden (CSS default) */
+            z-index: 1; /* Start on Layer 1 (CSS default) */
+            transition: transform 0.3s ease, visibility 0s linear 0s;
+            font-size: 50px;
+            line-height: 1;
+            text-align: center;
+            user-select: none;
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
+        }
+
+        /* .found class brings T-Rex to the front */
+        #cat.found {
+            visibility: visible; /* Reveal */
+            z-index: 3; /* Bring to Layer 3 */
+            transform: scale(1.1); /* Pop effect */
+        }
+
+        /* --- Message and Status Styling --- */
+        #status-area { margin-top: 15px; min-height: 3em; }
+        #message { font-weight: bold; font-size: 1.1em; min-height: 1.2em; color: #d32f2f; margin-bottom: 5px; }
+        #message.success { color: #388e3c; }
+        #chances-info { color: #0277bd; font-size: 1em; }
+
+        /* --- Restart Button Pop-up Styling --- */
+        #restart-button {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 100; display: none; padding: 20px 35px; font-size: 1.3em;
+            cursor: pointer; background-color: #4CAF50; color: white; border: none;
+            border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        #restart-button:hover { background-color: #45a049; }
+        #restart-button:active { transform: translate(-50%, -50%) scale(0.98); }
+
+    </style>
+</head>
+<body>
+<div class="nav">
+    <a class="link" href="Dino.html">Blog</a> &nbsp; | &nbsp;
+    <a class="link" href="Dino.html">Blog</a> &nbsp; | &nbsp;
+    <a class="link" href="../index.html" >Home</a> &nbsp; | &nbsp;
+    <a class="link" href="video.html">Dinosaur Race</a> &nbsp; | &nbsp;
+    <a class="link" href="resume.html">Resume</a> 
+</div>
+    <h1>Find the T-Rex!</h1>
+
+    <div id="game-area">
+        <div class="hiding-spot" id="tree1" aria-label="Tree"></div>
+        <div class="hiding-spot" id="tree2" aria-label="Tree"></div>
+        <div class="hiding-spot" id="bush1" aria-label="Bush"></div>
+        <div class="hiding-spot" id="bush2" aria-label="Bush"></div>
+        <div class="hiding-spot" id="bench1" aria-label="Bench"></div>
+        <div class="hiding-spot" id="cloud1" aria-label="Cloud"></div>
+        <div class="hiding-spot" id="cloud2" aria-label="Cloud"></div>
+        <div id="cat" aria-label="T-Rex"><img src="Untitled127.png" alt="" style="transform: scale(0.40);"></div>
+    </div>
+
+    <div id="status-area">
+        <p id="message" aria-live="polite"></p>
+        <p id="chances-info">Chances left: <span id="chances">4</span></p>
+    </div>
+
+    <button id="restart-button">Play Again?</button>
+
+    <script>
+        // JavaScript remains the same as the previous version
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Element References ---
+            const cat = document.getElementById('cat'); // T-Rex element
+            const hidingSpots = document.querySelectorAll('.hiding-spot');
+            const messageElement = document.getElementById('message');
+            const chancesElement = document.getElementById('chances');
+            const chancesInfoElement = document.getElementById('chances-info');
+            const restartButton = document.getElementById('restart-button');
+            const gameArea = document.getElementById('game-area');
+
+            // --- Game State Variables ---
+            let chancesLeft;
+            let catLocationId;
+            let gameOver;
+
+            // --- Helper Functions ---
+            function getRandomElement(elements) {
+                const index = Math.floor(Math.random() * elements.length);
+                return elements[index];
+            }
+
+            function positionCat(hidingSpotElement) {
+                const spotRect = hidingSpotElement.getBoundingClientRect();
+                const gameAreaRect = gameArea.getBoundingClientRect();
+                const spotTopRelativeToGameArea = spotRect.top - gameAreaRect.top;
+                const spotLeftRelativeToGameArea = spotRect.left - gameAreaRect.left;
+                const spotCenterX = spotLeftRelativeToGameArea + spotRect.width / 2;
+                const spotCenterY = spotTopRelativeToGameArea + spotRect.height / 2;
+                const catWidth = cat.offsetWidth || 50;
+                const catHeight = cat.offsetHeight || 50;
+                cat.style.top = `${spotCenterY - catHeight / 2}px`;
+                cat.style.left = `${spotCenterX - catWidth / 2}px`;
+                cat.classList.remove('found');
+            }
+
+            // --- Core Game Logic Functions ---
+            function initGame() {
+                chancesLeft = 3;
+                gameOver = false;
+                messageElement.textContent = 'Click an object to start!';
+                messageElement.className = '';
+                chancesElement.textContent = chancesLeft;
+                chancesInfoElement.style.display = 'block';
+                restartButton.style.display = 'none';
+                cat.classList.remove('found');
+
+                 hidingSpots.forEach(spot => {
+                    // Reset inline styles that might have been added
+                    spot.style.opacity = '';
+                    spot.style.border = '';
+                    spot.style.cursor = 'pointer';
+                    // Remove and re-add listener
+                    spot.removeEventListener('click', handleGuess);
+                    spot.addEventListener('click', handleGuess);
+                 });
+
+                const randomSpot = getRandomElement(hidingSpots);
+                catLocationId = randomSpot.id;
+
+                requestAnimationFrame(() => {
+                    positionCat(randomSpot);
+                });
+            }
+
+            function handleGuess(event) {
+                if (gameOver) return;
+                const clickedSpot = event.target;
+
+                if (clickedSpot.id === catLocationId) { // Correct Guess
+                    messageElement.textContent = "You found the T-Rex!";
+                    messageElement.className = 'success';
+                    cat.classList.add('found'); // Reveal T-Rex via CSS class
+                    clickedSpot.style.opacity = '1';
+                    clickedSpot.style.transform = 'scale(1.1)';
+                    endGame(true);
+                } else { // Incorrect Guess
+                    chancesLeft--;
+                    chancesElement.textContent = chancesLeft;
+                    messageElement.textContent = "Not here!";
+                    messageElement.className = '';
+                    clickedSpot.style.opacity = '0.6';
+                    clickedSpot.style.cursor = 'not-allowed';
+                    clickedSpot.removeEventListener('click', handleGuess);
+
+                    if (chancesLeft <= 0) { // Game Over - Out of Chances
+                        const correctSpotElement = document.getElementById(catLocationId);
+                        const correctSpotName = correctSpotElement?.getAttribute('aria-label') || 'the right spot';
+                        messageElement.textContent = `Game Over! The T-Rex was behind ${correctSpotName}.`;
+                        messageElement.className = '';
+                        cat.classList.add('found'); // Reveal T-Rex via CSS class
+                        if (correctSpotElement) {
+                            correctSpotElement.style.opacity = '1';
+                            correctSpotElement.style.border = '3px solid yellow';
+                        }
+                        endGame(false);
+                    }
+                }
+            }
+
+            function endGame(found) {
+                gameOver = true;
+                restartButton.style.display = 'block';
+                chancesInfoElement.style.display = 'none';
+                hidingSpots.forEach(spot => {
+                    spot.removeEventListener('click', handleGuess);
+                    spot.style.cursor = 'default';
+                });
+            }
+
+            // --- Event Listeners ---
+            restartButton.addEventListener('click', initGame);
+
+            // --- Initial Game Start ---
+            initGame();
+        });
+    </script>
+
+</body>
+</html>

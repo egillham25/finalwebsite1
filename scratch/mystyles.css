@@ -1,0 +1,37 @@
+img{
+    height: 250px;
+}
+body{
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    background-color: rgb(233, 248, 255);
+    background-image: url(Background\ for\ Dino\ \(1\).jpg);
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+h1,h2{
+    text-align: center;
+}
+.nav{
+    position: relative;
+    float: right;
+}
+.cat{
+     /* ... other existing styles ... */
+  position: absolute; /* Make sure it's absolutely positioned */
+  top: 550px/* Approximate top value where the arrow points (e.g., '250px') */;
+  left: 550px/* Approximate left value where the arrow points (e.g., '550px') */;
+  /* You might need to adjust width and height if the size is not right */
+  width: 50px; /* Example width */
+  height: auto; /* Maintain aspect ratio */
+}
+.baseball{
+    position: absolute; /* Make sure it's absolutely positioned */
+  top: 550px/* Approximate top value where the arrow points (e.g., '250px') */;
+  left: 800px/* Approximate left value where the arrow points (e.g., '550px') */;
+  /* You might need to adjust width and height if the size is not right */
+  width: 50px; /* Example width */
+  height: auto;
+}
+.link{
+    color: rgb(175, 39, 121);
+}
